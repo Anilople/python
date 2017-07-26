@@ -15,7 +15,7 @@
 
 # print mat4
 # lamb,colu=numpy.linalg.eig(mat4)
-
+# -*- coding: latin-1 -*-
 import pulp # 载入python求解线性规划的库
 model = pulp.LpProblem("profit",pulp.LpMaximize) # 创建对象，使用Maximize默认规划为取最大值
 

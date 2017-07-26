@@ -13,7 +13,7 @@ def drawAndSave(index,myRange):
     yRandom=[]
     xOrigin=0
     yOrigin=0
-    for i in range(100000):
+    for i in range(10000):
         # f.writelines(str(xOrigin)+'\t'+str(yOrigin)+'\n')
         xRandom.append(xOrigin)
         yRandom.append(yOrigin)
@@ -21,11 +21,12 @@ def drawAndSave(index,myRange):
         yOrigin+=random.randint(-myRange,myRange)
     plt.plot(xRandom,yRandom,'r')
     # f.close()
-    plt.savefig('randomPicture/'+str(index)+'.jpg') # 保存图片
+    plt.savefig(str(index)+'.jpg') # 保存图片
+	# plt.show()
     plt.clf()
 
 
-for i in range(10000):
+for i in range(1):
     drawAndSave(i,1)
 
 # plt.ylabel('this is y') # y轴标签
