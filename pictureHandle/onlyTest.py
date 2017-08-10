@@ -18,11 +18,10 @@ def deleteBeginAndLast(it):
     out=[]
     return it
 
-name='test.jpg'
-im = Image.open(name)
+im = Image.new('RGB',(400,200),255)
 # # im.size 返回图片的宽和高，一个二元组
-width=1000
-height=500
+width=im.size[0]
+height=im.size[1]
 size=width,height
 # print size
 # # im.thumbnail((480,270),Image.ANTIALIAS) # 重置图片大小
@@ -32,7 +31,7 @@ draw = ImageDraw.Draw(im) # 在使用draw.point() 之前，先用这个
 
 for i in range(width):
     for j in range(height):
-        draw.point((i,j),fill=(i,j%255,i%255))
+        draw.point((i,j),fill=(0,0,j))
         # t = im.getpixel((i,j))
         # if white(t):im.putpixel((i,j),(255,255,255))
         # color.append(t)
