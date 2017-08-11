@@ -53,7 +53,19 @@ for y in range(im.size[0]):# 遍历宽度
             im2.putpixel((y,x),0)
 
 im2.show()
-print getLetters(im2)
+letters=getLetters(im2)
+
+for charRange in letters:
+    start=charRange[0]
+    end=charRange[1]
+    charWidth=end-start+1
+    tempIm=Image.new('P',(charWidth,im2.size[1]),255)
+    for width in range(charWidth):
+        for height in range(im2.size[1]):
+            pixel=im2.getpixel((start+width,height))
+            tempIm.putpixel((width,height),pixel)
+    tempIm.show()
+
 # colorDict=getColorDict(im.histogram()) # 将historgram导入dict数据结构中
 # colorDict.items() 获取[(key,value)]
 # colorDictSorted=sorted(colorDict.items(),key=lambda x:x[1],reverse=True)
