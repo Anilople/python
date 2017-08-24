@@ -29,20 +29,33 @@ def addSQM(it):
         temp=temp+i
     return temp
 
-fileName='top250.txt' # txt文件名字在这里
+def buildMusicHTML(musicName):
+    return '''<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+	</head>
+	<body>
+		<embed width="1000" src="'''+musicName+'''"/>
+	</body>
+</html>'''
+
+def buildMusicLink(musicName):
+    return '<a href=\"music/'+musicName+'\"'+' target=\"_blank\"'+'>'+musicName+'</a>'
+
+fileName='1.txt' # txt文件名字在这里
 f = open(fileName)
 l = f.readlines()
 f.close()
-
-l=map(lambda x:splitByTab(x),l)
+path="C:/Users/lambda/Desktop/temp/Web/music/"
+l=map(lambda x:x.strip('\n'),l)
+f=open(path+'out.txt','w')
 for i in l:
-    i[1]=addSQM(i[1])
-l=map(lambda x:toSQLInsert(x),l)
-
-f=open('out.txt','w+')
-for i in l:
-    f.write(i)
-    f.write('\n')
+    f.write(buildMusicLink(i)+'\n')
+    f.write("<br></br>"+'\n')
+    # f=open(path+i+".html",'w')
+    # f.write(buildMusicHTML(i))
+f.close()
 # print b
 # l=map(lambda x:x.split(),l)
 # l=map(lambda x:map(lambda y:int(y,16),x),l)
