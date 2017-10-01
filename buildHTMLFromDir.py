@@ -65,7 +65,6 @@ scriptName=sys.argv[0] # this python script's name
 directory=sys.argv[1] # Build html directory in this directory
 HTMLBuildDirectory(os.getcwd(),directory)
 
-
 # dirLink=map(HTMLBuildDirLink,filter(os.path.isdir,listdir))
 # fileLink=map(HTMLBuildFileLink,filter(os.path.isfile,listdir))
 # out=HTMLInsertBodys(dirLink+fileLink)
