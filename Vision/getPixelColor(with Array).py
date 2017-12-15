@@ -2,18 +2,18 @@
 from PIL import Image
 from pylab import *
 
-imageName = 'test.jpg'
+imageName = 'ok.jpg'
 outFileName = 'out.txt'
 imArr = array(Image.open(imageName))
-
+# print imArr.size
 listToString=f=lambda x:reduce((lambda x,y:str(x)+' '+str(y)),x) # 定义一个list到string的函数
 
 outStringList=[] # 使用来一次性写入文件的string list，可以大幅提高写入时间
 imShape = imArr.shape 
-width = imShape[1] # 图片的宽
 high  = imShape[0] # 图片的高
+width = imShape[1] # 图片的宽
 # print width,high
-outStringList.append(str(width)+' '+str(high)+'\n') # 加入宽和高的信息
+outStringList.append(str(high)+' '+str(width)+'\n') # 加入高和宽的信息
 # print outStringList
 f = open(outFileName,'w') # 覆盖写入
 for h in range(high):
