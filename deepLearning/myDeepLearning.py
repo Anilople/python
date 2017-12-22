@@ -24,7 +24,8 @@ def initialize_parameters(layers):
     m = len(layers) - 1
     parameters={}
     for i in range(1,m+1):
-        parameters['W'+str(i)] = np.random.randn(layers[i],layers[i-1]) * 0.01
+        # parameters['W'+str(i)] = np.random.randn(layers[i],layers[i-1]) * 0.01
+        parameters['W'+str(i)] = np.random.randn(layers[i],layers[i-1]) / np.sqrt(layer_dims[l-1])
         parameters['b'+str(i)] = np.zeros((layers[i],1))
     return parameters
 
@@ -180,8 +181,8 @@ def nn_model(X,Y,num_iterations,learning_rate,layers,activation,derivative,print
         grads = backward_propagatin(Y,parameters,caches,derivative)
         parameters = update_parameters(parameters,grads,learning_rate)
         cost = compute_cost(caches['A'+str(L)],Y) # here we use defult lost function
-        if print_cost and i % 1000 == 0:
-            print(cost)
+        if print_cost and i % 100 == 0:
+            print('Cost after iteration '+str(i)+' '+str(cost))
         costs.append(cost)
     return parameters,costs
 
