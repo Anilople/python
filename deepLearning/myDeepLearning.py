@@ -25,7 +25,7 @@ def initialize_parameters(layers):
     parameters={}
     for i in range(1,m+1):
         # parameters['W'+str(i)] = np.random.randn(layers[i],layers[i-1]) * 0.01
-        parameters['W'+str(i)] = np.random.randn(layers[i],layers[i-1]) / np.sqrt(layer_dims[l-1])
+        parameters['W'+str(i)] = np.random.randn(layers[i],layers[i-1]) / np.sqrt(layers[l-1])
         parameters['b'+str(i)] = np.zeros((layers[i],1))
     return parameters
 
