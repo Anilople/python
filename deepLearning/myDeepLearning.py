@@ -1,5 +1,11 @@
 import numpy as np
 
+
+relu = lambda z:np.maximum(0,z)
+relu_deriv = lambda z:np.where(z > 0,1,0)
+sigmoid = lambda z:1/(1+np.exp(-z))
+sigmoid_deriv = lambda z:((lambda a:np.multiply(a,1-a))(sigmoid(z)))
+lost = lambda a,y: - y / a + (1-y) / (1-a)
 def initialize_parameters(layers):
     """
     Argument:
@@ -87,9 +93,9 @@ def backward_propagatin(Y,parameters,caches,derivative):
             they both have same size
     derivative -- A dictionary with
             (da/dz)_i,the derivative of i_th layer's activation function
-            use [str(i)] to get it, it take two parameters (Ai,Zi),
+            use [str(i)] to get it, it take two parameters (Zi),
                                     and return dAi/dZi, 
-                                    so we can get dZi through dZi = dA(i+1) * (dAi/dZi) 
+                                    so we can get dZi through dZi = dA(i) * (dAi/dZi) 
             use ['lost'] to get the derivative of lost function, two parameters (AL,Y) 
     Returns:
     grads -- A dictionary with the gradients
@@ -115,7 +121,8 @@ def backward_propagatin(Y,parameters,caches,derivative):
     grads = {'dA'+str(L):derivative_lost(AL,Y)} # dAL, i.e. dC/dAL
     for i in reversed(range(1,L+1)):
         dAi = grads['dA'+str(i)]
-        dAi_dZi = derivative[str(i)](caches['A'+str(i)],caches['Z'+str(i)])
+        # dAi_dZi = derivative[str(i)](caches['A'+str(i)],caches['Z'+str(i)])
+        dAi_dZi = derivative[str(i)](caches['Z'+str(i)])
         dZi = dAi * dAi_dZi
         Ai_prev = caches['A'+str(i-1)]
         Wi = parameters['W'+str(i)]
