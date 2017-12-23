@@ -88,7 +88,7 @@ def forward_propagation(X, parameters,activation,keep_prob = 1):
         caches['Z'+str(i)] = np.dot(parameters['W'+str(i)],caches['A'+str(i-1)]) + parameters['b'+str(i)]
         Ai = activation[str(i)](caches['Z'+str(i)])
         di = np.random.rand(Ai.shape[0],Ai.shape[1]) <= keep_prob
-        caches['A'+str(i)] = Ai * di
+        caches['A'+str(i)] = Ai * di / keep_prob
         # caches['A'+str(i)] = activation[str(i)](caches['Z'+str(i)])
     return caches
 
