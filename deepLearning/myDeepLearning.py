@@ -118,7 +118,7 @@ def backward_propagatin(Y,parameters,caches,derivative):
     L = len(parameters) // 2
     derivative_lost = derivative['lost'] # derivative of lost function
     AL = caches['A'+str(L)] # activation of layer L, i.e. final layer
-    grads = {'dA'+str(L):derivative_lost(AL,Y)} # dAL, i.e. dC/dAL
+    grads = {'dA'+str(L):AL - Y} # dAL, i.e. dC/dAL
     for i in reversed(range(1,L+1)):
         dAi = grads['dA'+str(i)]
         # dAi_dZi = derivative[str(i)](caches['A'+str(i)],caches['Z'+str(i)])
