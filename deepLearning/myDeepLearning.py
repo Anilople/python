@@ -1,6 +1,5 @@
 import numpy as np
 
-
 relu = lambda z:np.maximum(0,z)
 relu_deriv = lambda z:np.where(z > 0,1,0)
 sigmoid = lambda z:1/(1+np.exp(-z))
@@ -21,11 +20,11 @@ def initialize_parameters(layers):
                     Wi -- weight matrix of shape (layers[i], layers[i-1])
                     bi -- bias vector of shape (layers[i], 1)
     """
-    m = len(layers) - 1
+    L = len(layers) - 1
     parameters={}
-    for i in range(1,m+1):
+    for i in range(1,L+1):
         # parameters['W'+str(i)] = np.random.randn(layers[i],layers[i-1]) * 0.01
-        parameters['W'+str(i)] = np.random.randn(layers[i],layers[i-1]) / np.sqrt(layers[i-1])
+        parameters['W'+str(i)] = np.random.randn(layers[i],layers[i-1]) / np.sqrt(2.0/layers[i-1]) # relu
         parameters['b'+str(i)] = np.zeros((layers[i],1))
     return parameters
 
@@ -155,14 +154,14 @@ def update_parameters(parameters, grads, learning_rate):
         parameters["b" + str(i)] -= learning_rate * grads['db'+str(i)]
     return parameters
 
-def nn_model(X,Y,num_iterations,learning_rate,layers,activation,derivative,print_cost=False):
+def nn_model(X,Y,layers,num_iterations,learning_rate,activation,derivative,print_cost=False):
     """
     Arguments:
     X -- dataset of shape (n_x, number of examples)
     Y -- labels of shape (AL, number of examples)
-    num_iterations -- Number of iterations in gradient descent loop
     layers -- every layer's size, layers[i] mean the size of i_th layers
                  layers[0] mean the input size
+    num_iterations -- Number of iterations in gradient descent loop
     activation -- a python dictionary
                 activation['i'] -- the activation function of i_th layer
     derivative -- a python dictionary
@@ -186,7 +185,7 @@ def nn_model(X,Y,num_iterations,learning_rate,layers,activation,derivative,print
         costs.append(cost)
     return parameters,costs
 
-def predict(X, parameters,activation,predict_function):
+def predict(X, parameters,activation,predict_function = lambda AL:(AL > 0.5).astype(float)):
     """
     Using the learned parameters, predicts a class for each example in X
     
@@ -205,6 +204,18 @@ def predict(X, parameters,activation,predict_function):
     predictions = predict_function(AL)
     return predictions
 
+def getFuncFrom(layers):
+    L = len(layers) - 1
+    activation = {str(L):sigmoid}
+    derivative = {str(L):sigmoid_deriv,'lost':lost}
+    for i in range(1,L):
+        activation[str(i)] = relu
+        derivative[str(i)] = relu_deriv
+    return activation,derivative
 
-
-
+def calcuAccuracy(predictions,reals):
+    assert(predictions.shape == reals.shape)
+    predictions.astype(float)
+    reals.astype(float)
+    m = reals.shape[1]
+    return 1 - 1.0/m * np.sum(np.abs(predictions - reals))
