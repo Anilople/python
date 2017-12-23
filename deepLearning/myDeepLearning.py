@@ -24,11 +24,12 @@ def initialize_parameters(layers):
     parameters={}
     for i in range(1,L+1):
         # parameters['W'+str(i)] = np.random.randn(layers[i],layers[i-1]) * 0.01
-        parameters['W'+str(i)] = np.random.randn(layers[i],layers[i-1]) / np.sqrt(2.0/layers[i-1]) # relu
+        # parameters['W'+str(i)] = np.random.randn(layers[i],layers[i-1]) / np.sqrt(2.0/layers[i-1]) # relu
+        parameters['W'+str(i)] = np.random.randn(layers[i],layers[i-1]) / np.sqrt(layers[i-1])
         parameters['b'+str(i)] = np.zeros((layers[i],1))
     return parameters
 
-def compute_cost(AL,Y,f=None):
+def compute_cost(AL,Y,parameters=None,lambd=0,f=None):
     """
     Implement the cost function defined by equation (7).
 
@@ -47,9 +48,18 @@ def compute_cost(AL,Y,f=None):
     losts = Y * np.log(AL) + (1-Y) * np.log(1-AL)
     cost = -1.0/m * np.sum(losts)
     assert(cost.shape == ())
+    
+    # now we have compute cost without regularization
+    # for general, whether lambd = 0 or not, we cal lambd/2/m * W
+    # or check if lambd = 0,then return
+    if lambd == 0: return cost
+    L = len(parameters) // 2
+    for i in range(1,L+1):
+        Wi = parameters['W'+str(i)]
+        cost += np.sum(np.power(Wi,2)) * lambd / 2 / m
     return cost
 
-def forward_propagation(X, parameters,activation):
+def forward_propagation(X, parameters,activation,keep_prob = 1):
     """
     Argument:
     X -- input data , shape is (n_x,number of example)
@@ -76,7 +86,10 @@ def forward_propagation(X, parameters,activation):
         # Ai = activation[str(i)](Zi)
         # cache['A'+str(i)] = Ai
         caches['Z'+str(i)] = np.dot(parameters['W'+str(i)],caches['A'+str(i-1)]) + parameters['b'+str(i)]
-        caches['A'+str(i)] = activation[str(i)](caches['Z'+str(i)])
+        Ai = activation[str(i)](caches['Z'+str(i)])
+        di = np.random.rand(Ai.shape[0],Ai.shape[1]) <= keep_prob
+        caches['A'+str(i)] = Ai * di
+        # caches['A'+str(i)] = activation[str(i)](caches['Z'+str(i)])
     return caches
 
 
@@ -118,8 +131,18 @@ def backward_propagatin(Y,parameters,caches,derivative,lambd = 0):
     L = len(parameters) // 2
     derivative_lost = derivative['lost'] # derivative of lost function
     AL = caches['A'+str(L)] # activation of layer L, i.e. final layer
-    grads = {'dA'+str(L):AL - Y} # dAL, i.e. dC/dAL
-    for i in reversed(range(1,L+1)):
+    # becasuse the derivative of lost will appear a = 0, then divide zero
+    # so we get dZL = AL - Y, becasuse dL/dAL = - y / a + (1-y) / (1-a) and dAL/dZL = a * (1-a)
+    dZL = AL - Y
+    AL_prev = caches['A'+str(L-1)]
+    WL = parameters['W'+str(L)]
+    bL = parameters['b'+str(L)]
+    dAL_prev,dWL,dbL = linear_backward(dZL,AL_prev,WL,bL,lambd)
+    grads = {}
+    grads['dA'+str(L-1)] = dAL_prev
+    grads['dW'+str(L)] = dWL
+    grads['db'+str(L)] = dbL
+    for i in reversed(range(1,L)):
         dAi = grads['dA'+str(i)]
         # dAi_dZi = derivative[str(i)](caches['A'+str(i)],caches['Z'+str(i)])
         dAi_dZi = derivative[str(i)](caches['Z'+str(i)])
@@ -154,7 +177,7 @@ def update_parameters(parameters, grads, learning_rate):
         parameters["b" + str(i)] -= learning_rate * grads['db'+str(i)]
     return parameters
 
-def nn_model(X,Y,layers,num_iterations,learning_rate,activation,derivative,print_cost=False,lambd = 0):
+def nn_model(X,Y,layers,num_iterations,learning_rate,activation,derivative,print_cost=False,lambd = 0,keep_prob = 1):
     """
     Arguments:
     X -- dataset of shape (n_x, number of examples)
@@ -176,11 +199,11 @@ def nn_model(X,Y,layers,num_iterations,learning_rate,activation,derivative,print
     L = len(parameters) // 2
     costs = []
     for i in range(num_iterations):
-        caches = forward_propagation(X,parameters,activation)
+        caches = forward_propagation(X,parameters,activation,keep_prob)
         grads = backward_propagatin(Y,parameters,caches,derivative,lambd)
         parameters = update_parameters(parameters,grads,learning_rate)
-        cost = compute_cost(caches['A'+str(L)],Y) # here we use defult lost function
-        if print_cost and i % 100 == 0:
+        cost = compute_cost(caches['A'+str(L)],Y,parameters,lambd) # here we use defult lost function
+        if print_cost and i % 1000 == 0:
             print('Cost after iteration '+str(i)+' '+str(cost))
         costs.append(cost)
     return parameters,costs
