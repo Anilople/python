@@ -81,7 +81,7 @@ def forward_propagation(X, parameters,activation):
 
 
 
-def backward_propagatin(Y,parameters,caches,derivative):
+def backward_propagatin(Y,parameters,caches,derivative,lambd = 0):
     '''
     Arguments:
     Y -- true "label" vector (containing 0 if non-cat, 1 if cat)
@@ -103,10 +103,10 @@ def backward_propagatin(Y,parameters,caches,derivative):
              grads["dW" + str(l)] = ...
              grads["db" + str(l)] = ... 
     '''
-    def linear_backward(dZ,A_prev,W,b): # a sub function to process one step backward
+    def linear_backward(dZ,A_prev,W,b,lambd = 0): # a sub function to process one step backward
         m = dZ.shape[1]
         dA_prev = np.dot(W.T,dZ)
-        dW = 1.0/m * np.dot(dZ,A_prev.T)
+        dW = 1.0/m * (np.dot(dZ,A_prev.T) + lambd * W)
         db = 1.0/m * np.sum(dZ,axis=1,keepdims=True)
         assert(dW.shape == W.shape)
         assert(db.shape == b.shape)
@@ -127,7 +127,7 @@ def backward_propagatin(Y,parameters,caches,derivative):
         Ai_prev = caches['A'+str(i-1)]
         Wi = parameters['W'+str(i)]
         bi = parameters['b'+str(i)]
-        dAi_prev,dWi,dbi = linear_backward(dZi,Ai_prev,Wi,bi)
+        dAi_prev,dWi,dbi = linear_backward(dZi,Ai_prev,Wi,bi,lambd)
         grads['dA'+str(i-1)] = dAi_prev
         grads['dW'+str(i)] = dWi
         grads['db'+str(i)] = dbi
@@ -154,7 +154,7 @@ def update_parameters(parameters, grads, learning_rate):
         parameters["b" + str(i)] -= learning_rate * grads['db'+str(i)]
     return parameters
 
-def nn_model(X,Y,layers,num_iterations,learning_rate,activation,derivative,print_cost=False):
+def nn_model(X,Y,layers,num_iterations,learning_rate,activation,derivative,print_cost=False,lambd = 0):
     """
     Arguments:
     X -- dataset of shape (n_x, number of examples)
@@ -177,7 +177,7 @@ def nn_model(X,Y,layers,num_iterations,learning_rate,activation,derivative,print
     costs = []
     for i in range(num_iterations):
         caches = forward_propagation(X,parameters,activation)
-        grads = backward_propagatin(Y,parameters,caches,derivative)
+        grads = backward_propagatin(Y,parameters,caches,derivative,lambd)
         parameters = update_parameters(parameters,grads,learning_rate)
         cost = compute_cost(caches['A'+str(L)],Y) # here we use defult lost function
         if print_cost and i % 100 == 0:
