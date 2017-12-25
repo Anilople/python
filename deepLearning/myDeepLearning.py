@@ -76,7 +76,7 @@ def forward_propagation(X, parameters,activation,keep_prob = 1):
     """
     # L = parameters['L']
     L = len(parameters) // 2
-    caches = {'A0':X}
+    caches = {'A0':X,'D0':np.random.rand(X.shape[0],X.shape[1]) < 1}
     for i in range(1,L+1):
         # Wi = parameters['W'+str(i)]
         # Ai_prev = cache['A'+str(i-1)]
@@ -87,14 +87,15 @@ def forward_propagation(X, parameters,activation,keep_prob = 1):
         # cache['A'+str(i)] = Ai
         caches['Z'+str(i)] = np.dot(parameters['W'+str(i)],caches['A'+str(i-1)]) + parameters['b'+str(i)]
         Ai = activation[str(i)](caches['Z'+str(i)])
-        di = np.random.rand(Ai.shape[0],Ai.shape[1]) <= keep_prob
-        caches['A'+str(i)] = Ai * di / keep_prob
+        Di = np.random.rand(Ai.shape[0],Ai.shape[1]) < keep_prob
+        caches['D'+str(i)] = Di
+        caches['A'+str(i)] = Ai * Di / keep_prob if i < L else Ai # not touch AL
         # caches['A'+str(i)] = activation[str(i)](caches['Z'+str(i)])
     return caches
 
 
 
-def backward_propagatin(Y,parameters,caches,derivative,lambd = 0):
+def backward_propagation(Y,parameters,caches,derivative,lambd = 0,keep_prob = 1):
     '''
     Arguments:
     Y -- true "label" vector (containing 0 if non-cat, 1 if cat)
@@ -116,9 +117,10 @@ def backward_propagatin(Y,parameters,caches,derivative,lambd = 0):
              grads["dW" + str(l)] = ...
              grads["db" + str(l)] = ... 
     '''
-    def linear_backward(dZ,A_prev,W,b,lambd = 0): # a sub function to process one step backward
+    def linear_backward(dZ,A_prev,W,b,lambd = 0,keep_prob = 1,D_prev = None): # a sub function to process one step backward
         m = dZ.shape[1]
-        dA_prev = np.dot(W.T,dZ)
+        dA_prev = np.dot(W.T,dZ) / keep_prob
+        dA_prev *= D_prev if keep_prob < 1 else 1 # dAL_prev's node must shut down as same as AL_prev
         dW = 1.0/m * (np.dot(dZ,A_prev.T) + lambd * W)
         db = 1.0/m * np.sum(dZ,axis=1,keepdims=True)
         assert(dW.shape == W.shape)
@@ -137,7 +139,7 @@ def backward_propagatin(Y,parameters,caches,derivative,lambd = 0):
     AL_prev = caches['A'+str(L-1)]
     WL = parameters['W'+str(L)]
     bL = parameters['b'+str(L)]
-    dAL_prev,dWL,dbL = linear_backward(dZL,AL_prev,WL,bL,lambd)
+    dAL_prev,dWL,dbL = linear_backward(dZL,AL_prev,WL,bL,lambd,keep_prob,caches['D'+str(L-1)])
     grads = {}
     grads['dA'+str(L-1)] = dAL_prev
     grads['dW'+str(L)] = dWL
@@ -150,7 +152,7 @@ def backward_propagatin(Y,parameters,caches,derivative,lambd = 0):
         Ai_prev = caches['A'+str(i-1)]
         Wi = parameters['W'+str(i)]
         bi = parameters['b'+str(i)]
-        dAi_prev,dWi,dbi = linear_backward(dZi,Ai_prev,Wi,bi,lambd)
+        dAi_prev,dWi,dbi = linear_backward(dZi,Ai_prev,Wi,bi,lambd,keep_prob,caches['D'+str(i-1)])
         grads['dA'+str(i-1)] = dAi_prev
         grads['dW'+str(i)] = dWi
         grads['db'+str(i)] = dbi
@@ -200,7 +202,7 @@ def nn_model(X,Y,layers,num_iterations,learning_rate,activation,derivative,print
     costs = []
     for i in range(num_iterations):
         caches = forward_propagation(X,parameters,activation,keep_prob)
-        grads = backward_propagatin(Y,parameters,caches,derivative,lambd)
+        grads = backward_propagation(Y,parameters,caches,derivative,lambd,keep_prob)
         parameters = update_parameters(parameters,grads,learning_rate)
         cost = compute_cost(caches['A'+str(L)],Y,parameters,lambd) # here we use defult lost function
         if print_cost and i % 1000 == 0:

@@ -1,3 +1,10 @@
 *.jpg
+*.png
 
 *.txt
+
+*.pyc
+
+*.gif
+*.h5
+*.ipynb
