@@ -29,23 +29,6 @@ def initialize_parameters(layers):
         parameters['b'+str(i)] = np.zeros((layers[i],1))
     return parameters
 
-def mini_batches_random(X,Y,mini_batch_size = 64,seed = 0):
-    np.random.seed(seed)
-    m = X.shape[1]
-    assert(m == Y.shape[1])
-    mini_batches = []
-    permutation = list(np.random.permutation(m))
-    shuffled_X = X[:,permutation]
-    shuffled_Y = Y[:,permutation]
-    
-    k = 0
-    while k*mini_batch_size < m:
-        mini_batch = (shuffled_X[:,k*mini_batch_size:(k+1)*mini_batch_size],shuffled_Y[:,k*mini_batch_size:(k+1)*mini_batch_size])
-        mini_batches.append(mini_batch)
-        k = k + 1
-    return mini_batches
-    
-    
 def compute_cost(AL,Y,parameters=None,lambd=0,f=lambda AL,Y:Y * np.log(AL) + (1-Y) * np.log(1-AL)):
     """
     Implement the cost function defined by equation (7).
@@ -195,6 +178,22 @@ def update_parameters(parameters, grads, learning_rate):
         parameters["b" + str(i)] -= learning_rate * grads['db'+str(i)]
     return parameters
 
+def mini_batches_random(X,Y,mini_batch_size = 64,seed = 0):
+    np.random.seed(seed)
+    m = X.shape[1]
+    assert(m == Y.shape[1])
+    mini_batches = []
+    permutation = list(np.random.permutation(m))
+    shuffled_X = X[:,permutation]
+    shuffled_Y = Y[:,permutation]
+    
+    k = 0
+    while k*mini_batch_size < m:
+        mini_batch = (shuffled_X[:,k*mini_batch_size:(k+1)*mini_batch_size],shuffled_Y[:,k*mini_batch_size:(k+1)*mini_batch_size])
+        mini_batches.append(mini_batch)
+        k = k + 1
+    return mini_batches
+    
 def nn_model(X,Y,layers,num_iterations,learning_rate,activation,derivative,print_cost=False,lambd = 0,keep_prob = 1):
     """
     Arguments:
@@ -259,6 +258,50 @@ def nn_model_momentum(X,Y,layers,num_iterations,learning_rate,activation,derivat
         costs.append(cost)
     return parameters,costs
 
+    
+def nn_model_adam(X,Y,layers,num_iterations,learning_rate,activation,derivative,print_cost=False,lambd = 0,keep_prob = 1,beta1 = 0.9, beta2=0.999, epsilon = 1e-8):
+    def initialize_adam(parameters):
+        v = {}
+        s = {}
+        L = len(parameters) // 2
+        for i in range(1,L+1):
+            Wi = parameters['W'+str(i)]
+            bi = parameters['b'+str(i)]
+            v["dW" + str(i)] = np.zeros(Wi.shape)
+            v["db" + str(i)] = np.zeros(bi.shape)
+            s["dW" + str(i)] = np.zeros(Wi.shape)
+            s["db" + str(i)] = np.zeros(bi.shape)
+        return v,s
+    
+    def update_v_s(v,s,grads,t,beta1 = 0.9, beta2=0.999, epsilon = 1e-8):
+        L = len(parameters) // 2
+        for i in range(1,L+1):
+            v["dW" + str(i)] = beta1 * v['dW' + str(i)] + (1-beta1) * grads['dW' + str(i)]
+            v["db" + str(i)] = beta1 * v['db' + str(i)] + (1-beta1) * grads['db' + str(i)]
+            vW_corrected = v["dW" + str(i)] / (1-np.power(beta1,t))
+            vb_corrected = v["db" + str(i)] / (1-np.power(beta1,t))
+            s["dW" + str(i)] = beta2 * s['dW' + str(i)] + (1-beta2) * np.power(grads['dW' + str(i)], 2)
+            s["db" + str(i)] = beta2 * s['db' + str(i)] + (1-beta2) * np.power(grads['db' + str(i)], 2)   
+            sW_corrected = s["dW" + str(i)] / (1-np.power(beta2,t))
+            sb_corrected = s["db" + str(i)] / (1-np.power(beta2,t))
+            grads["dW" + str(i)] = vW_corrected / (epsilon + np.sqrt(sW_corrected))
+            grads["db" + str(i)] = vb_corrected / (epsilon + np.sqrt(sb_corrected))
+        return v,s,grads
+    parameters = initialize_parameters(layers)
+    L = len(parameters) // 2
+    v,s = initialize_adam(parameters)
+    costs = []
+    for i in range(num_iterations):
+        caches = forward_propagation(X,parameters,activation,keep_prob)
+        grads = backward_propagation(Y,parameters,caches,derivative,lambd,keep_prob)
+        v,s,grads = update_v_s(v,s,grads,i+1,beta1 = 0.9, beta2=0.999, epsilon = 1e-8)
+        parameters = update_parameters(parameters,grads,learning_rate)
+        cost = compute_cost(caches['A'+str(L)],Y,parameters,lambd) # here we use defult lost function
+        if print_cost and i % 1000 == 0:
+            print('Cost after iteration '+str(i)+' '+str(cost))
+        costs.append(cost)
+    return parameters,costs
+            
 def predict(X, parameters,activation,predict_function = lambda AL:(AL > 0.5).astype(float)):
     """
     Using the learned parameters, predicts a class for each example in X
