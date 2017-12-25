@@ -29,6 +29,23 @@ def initialize_parameters(layers):
         parameters['b'+str(i)] = np.zeros((layers[i],1))
     return parameters
 
+def mini_batches_random(X,Y,mini_batch_size = 64,seed = 0):
+    np.random.seed(seed)
+    m = X.shape[1]
+    assert(m == Y.shape[1])
+    mini_batches = []
+    permutation = list(np.random.permutation(m))
+    shuffled_X = X[:,permutation]
+    shuffled_Y = Y[:,permutation]
+    
+    k = 0
+    while k*mini_batch_size < m:
+        mini_batch = (shuffled_X[:,k*mini_batch_size:(k+1)*mini_batch_size],shuffled_Y[:,k*mini_batch_size:(k+1)*mini_batch_size])
+        mini_batches.append(mini_batch)
+        k = k + 1
+    return mini_batches
+    
+    
 def compute_cost(AL,Y,parameters=None,lambd=0,f=lambda AL,Y:Y * np.log(AL) + (1-Y) * np.log(1-AL)):
     """
     Implement the cost function defined by equation (7).
@@ -156,7 +173,7 @@ def backward_propagation(Y,parameters,caches,derivative,lambd = 0,keep_prob = 1)
         grads['dW'+str(i)] = dWi
         grads['db'+str(i)] = dbi
     return grads
-
+    
 def update_parameters(parameters, grads, learning_rate):
     """
     Update parameters using gradient descent
@@ -203,6 +220,39 @@ def nn_model(X,Y,layers,num_iterations,learning_rate,activation,derivative,print
         caches = forward_propagation(X,parameters,activation,keep_prob)
         grads = backward_propagation(Y,parameters,caches,derivative,lambd,keep_prob)
         parameters = update_parameters(parameters,grads,learning_rate)
+        cost = compute_cost(caches['A'+str(L)],Y,parameters,lambd) # here we use defult lost function
+        if print_cost and i % 1000 == 0:
+            print('Cost after iteration '+str(i)+' '+str(cost))
+        costs.append(cost)
+    return parameters,costs
+
+def nn_model_momentum(X,Y,layers,num_iterations,learning_rate,activation,derivative,print_cost=False,lambd = 0,keep_prob = 1,beta = 0.9):
+    def getV(parameters):
+        L = len(parameters) // 2
+        v = {}
+        for i in range(1,L+1):
+            dWi = parameters['W'+str(i)]
+            v['dW'+str(i)] = np.zeros(dWi.shape)
+            v['db'+str(i)] = np.zeros((dWi.shape[0],1))
+        return v
+        
+    def update_V(v,grads,beta = 0.9):
+        L = len(v) // 2
+        for i in range(1,L+1):
+            dWi = grads['dW'+str(i)]
+            v['dW'+str(i)] = beta * v['dW'+str(i)] + (1-beta) * grads['dW'+str(i)]
+            v['db'+str(i)] = beta * v['db'+str(i)] + (1-beta) * grads['db'+str(i)]
+        return v
+        
+    parameters = initialize_parameters(layers)
+    L = len(parameters) // 2
+    v = getV(parameters)
+    costs = []
+    for i in range(num_iterations):
+        caches = forward_propagation(X,parameters,activation,keep_prob)
+        grads = backward_propagation(Y,parameters,caches,derivative,lambd,keep_prob)
+        v = update_V(v,grads,beta = 0.9)
+        parameters = update_parameters(parameters,v,learning_rate)
         cost = compute_cost(caches['A'+str(L)],Y,parameters,lambd) # here we use defult lost function
         if print_cost and i % 1000 == 0:
             print('Cost after iteration '+str(i)+' '+str(cost))
