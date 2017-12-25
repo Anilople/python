@@ -29,7 +29,7 @@ def initialize_parameters(layers):
         parameters['b'+str(i)] = np.zeros((layers[i],1))
     return parameters
 
-def compute_cost(AL,Y,parameters=None,lambd=0,f=None):
+def compute_cost(AL,Y,parameters=None,lambd=0,f=lambda AL,Y:Y * np.log(AL) + (1-Y) * np.log(1-AL)):
     """
     Implement the cost function defined by equation (7).
 
@@ -43,9 +43,8 @@ def compute_cost(AL,Y,parameters=None,lambd=0,f=None):
     Y.astype(float)
     m = AL.shape[1]
     assert(Y.shape[1] == m)
-    if f != None: # watch here
-        losts = f(AL,Y)
-    losts = Y * np.log(AL) + (1-Y) * np.log(1-AL)
+    # if f != None: # watch here
+    losts = f(AL,Y)
     cost = -1.0/m * np.sum(losts)
     assert(cost.shape == ())
     
