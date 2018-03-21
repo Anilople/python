@@ -38,6 +38,7 @@ recv_data = sk.recv(1024) # 收信息
 # 	1024 代表一次接收的字节数, 如果客户端一次发送的信息超过这个数值,服务端就会报错
 # 返回参数意义
 #	recv_data 为收到的数据, 数据类型为bytes, 注意不是str(字符串)
+
 sk.sendto(send_data,addr) # 发信息
 # 参数意义
 # send_data 为 bytes类型, 代表要发送的数据
@@ -76,7 +77,55 @@ recv_data = sk.recv(1024) # 收信息
 # 	1024 代表一次接收的字节数, 如果客户端一次发送的信息超过这个数值,服务端就会报错
 # 返回参数意义
 #	recv_data 为收到的数据, 数据类型为bytes, 注意不是str(字符串)
+
 sk.sendto(send_data,addr) # 发信息
+# 参数意义
+# send_data 为 bytes类型, 代表要发送的数据
+# addr 为 tuple, 里边有客户端的ip地址和端口号, 类似('127.0.0.1',6666)
+
+'''
+辅助的工具
+bytes 与 str 直接的转换
+由于收发数据只能用bytes, 但是人在查看信息的时候, str更友好, 所以需要转换
+bytes -> str : str(data,encoding='utf8')
+str -> bytes : bytes(data,encoding='utf8)
+'''
+```
+
+客户端直接connect就可以进行收发数据, 但是服务端由于要有同时为多个客户端服务的能力, 在程序上要复杂一些.
+
+
+
+#### 使用UDP协议进行通信(近乎字典式的教程)
+
+一个程序为**服务端**,一个为**客户端**
+
+对于**服务端**, 步骤如下:(udp的服务端和tcp的相比, 少了**bind, listen 和 accept**的过程.)
+
+```python
+import socket # 载入socket的库
+# 1. 建立一个socket
+udpServer = socket.socket(socket.AF_INET,socket.SOCK_DGRAM,socket.IPPROTO_UDP)
+# 参数意义
+# AF_INET 代表用ipv4
+# SOCK_DGRAM 代表用UDP
+# IPPROTO_UDP 代表使用的协议
+
+# 2.将这个socket和ip以及端口进行绑定
+udpServer.bind(('127.0.0.1',6666))
+# 参数意义, 注意传入的是tuple
+# 字符串'127.0.0.1'代表ip地址
+# 数字6666 代表端口号
+
+# 3.收发信息 -- 收用recvfrom, 发用sendto
+recv_data, client_addr = udpServer.recvfrom(1024) # 收信息
+# 接收参数意义
+# 	1024 代表一次接收的字节数, 如果客户端一次发送的信息超过这个数值,服务端就会报错
+# 返回参数意义
+#	recv_data 为收到的数据, 数据类型为bytes, 注意不是str(字符串)
+# 	client_addr 为发送消息的客户端的ip的端口号
+
+udpServer.sendto(send_data,addr) # 发信息
 # 参数意义
 # send_data 为 bytes类型, 代表要发送的数据
 # addr 为 tuple, 里边有客户端的ip地址和端口号, 类似('127.0.0.1',6666)
@@ -91,4 +140,38 @@ str -> bytes : bytes(data,encoding='utf8)
 '''
 ```
 
-客户端直接connect就可以进行收发数据, 但是服务端由于要有同时为多个客户端服务的能力, 在程序上要复杂一些.
+
+
+对于**客户端**:(udp的客户端和tcp的客户端相比, 少了**connect**)
+
+```python
+import socket # 载入socket的库
+# 1. 建立一个socket
+udpClient = socket.socket(socket.AF_INET,socket.SOCK_DGRAM,socket.IPPROTO_UDP)
+# 参数意义
+# AF_INET 代表用ipv4
+# SOCK_DGRAM 代表用udp
+# IPPROTO_UDP 代表使用的协议
+
+# 2.收发信息 -- 收用recvfrom, 发用sendto
+recv_data,server_addr = udpClient.recvfrom(1024) # 收信息
+# 接收参数意义
+# 	1024 代表一次接收的字节数, 如果客户端一次发送的信息超过这个数值,服务端就会报错
+# 返回参数意义
+#	recv_data 为收到的数据, 数据类型为bytes, 注意不是str(字符串)
+# 	server_addr 为发送消息的服务端的ip的端口号
+
+sk.sendto(send_data,addr) # 发信息
+# 参数意义
+# send_data 为 bytes类型, 代表要发送的数据
+# addr 为 tuple, 里边有客户端的ip地址和端口号, 类似('127.0.0.1',6666)
+
+
+'''
+辅助的工具
+bytes 与 str 直接的转换
+由于收发数据只能用bytes, 但是人在查看信息的时候, str更友好, 所以需要转换
+bytes -> str : str(data,encoding='utf8')
+str -> bytes : bytes(data,encoding='utf8)
+'''
+```
