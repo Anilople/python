@@ -8,6 +8,9 @@ def printTime(threadName,delay,delayCount = 10):
         print(threadName,time.ctime(time.time()),'---','delayCount:',str(delayCount))
 
 
+threadLock = threading.Lock()
+threads = []
+
 class MyThread(threading.Thread):
     def __init__(self,threadID,name,delay,counter):
         threading.Thread.__init__(self)
@@ -17,14 +20,23 @@ class MyThread(threading.Thread):
         self.counter = counter
     def run(self):
         print("开始: "+self.name)
+        print("获取锁")
+        threadLock.acquire()
         printTime(self.name,self.delay,self.counter)
+        threadLock.release()
+        print("释放锁")
         print("退出: "+self.name)
 
+# creat
 thread1 = MyThread(1,'T-1',1,10)
 thread2 = MyThread(2,'T-2',3,3)
 
+threads = [thread1,thread2]
+
+# begin
 thread1.start()
 thread2.start()
-thread1.join()
-thread2.join()
+for thr in threads:
+    thr.join()
+
 print('quit')
