@@ -9,7 +9,7 @@
             "type": "python",
             "request": "launch",
             "stopOnEntry": true,
-            "pythonPath": "C:\\Python27",
+            "pythonPath": "C:\\Users\\lambda\\Anaconda3",
             "program": "${file}",
             "cwd": "${workspaceRoot}",
             "env": {},
