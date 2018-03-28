@@ -117,9 +117,9 @@ class NN:
     def predict(self,parameters = None,X = None,activation = None):# it's not general for predict
         # compute A{L}
         A = X
-        if not parameters: parameters = self.parameters
-        if not X: A = self
-        if not activation: activation = self.activation
+        if parameters is None: parameters = self.parameters
+        if X is None: A = self.caches['A0']
+        if activation is None: activation = self.activation
         for i in range(1,self.L+1):
             Wi,bi = parameters['W'+str(i)],parameters['b'+str(i)]
             Zi = np.dot(Wi,A) + bi
@@ -129,11 +129,12 @@ class NN:
             # Zi = np.dot(Wi,A) + bi
             # A  = self.activation[i](Zi)
         # assert(A.shape == self.Y.shape),'the shape of prediction is not correct'+'\nA\'s shape:'+str(A.shape)+'\nY\'s shape'+str(Y.shape)+'\n'
-        return np.where(A<=0.5,0.,1.)
+        # return np.where(A<=0.5,0.,1.)
+        return self.function['predictFunction'](A)
 
-    def accuracy(self,prediction,label):
-        assert(prediction.shape == label.shape),'There is diffrence between prediction\'shape and label\'shape.'
-        situation = prediction == label
+    def accuracy(self,predictions,labels):
+        assert(predictions.shape == labels.shape),'There is diffrence between prediction\'shape and label\'shape.'
+        situation = predictions == labels
         return np.sum(situation)/situation.size
 
     def train(self,learningRate,trainTimes,printCost = None):
