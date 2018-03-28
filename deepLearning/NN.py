@@ -71,13 +71,13 @@ class NN:
     def backwardPropagation(self):
         dataSize = self.Y.shape[1]
         # compute dZL
-        dZL = 1/dataSize * self.derivative[self.L](self.caches['Z'+str(self.L)],self.caches['A'+str(self.L)],self.Y) # watch here
-        self.grads = {'dZ'+str(self.L):dZL}
+        ZL,AL,Y = self.caches['Z'+str(self.L)],self.caches['A'+str(self.L)],self.Y
+        dZL = 1/dataSize * self.derivative[self.L](ZL,AL,Y) # watch here
+        self.grads['dZ'+str(self.L)] = dZL # add dZ{L} to gradient
+        # print('dZ'+str(self.L),dZL)
         for i in reversed(range(1,self.L+1)):
             dZi = self.grads['dZ'+str(i)]
-            Wi = self.parameters['W'+str(i)]
-            AiPrevious = self.caches['A'+str(i-1)] # !! i-1 not i
-            bi = self.parameters['b'+str(i)]
+            Wi, AiPrevious, bi = self.parameters['W'+str(i)], self.caches['A'+str(i-1)], self.parameters['b'+str(i)]
             assert(dZi.shape[0] == bi.shape[0]),'dZi.shape[0] != bi.shape[0]'
             dWi,dAiPrevious,dbi = self.backwardOneLayer(dZi,Wi,AiPrevious) # compute gradient of Wi,bi
             # add gradient in self.grads
@@ -85,7 +85,10 @@ class NN:
             self.grads['db'+str(i)] = dbi
             if i > 1 : # since there are no dA0 and dZ0
                 self.grads['dA'+str(i-1)] = dAiPrevious
-                self.grads['dZ'+str(i-1)] = self.derivative[i-1](dAiPrevious)
+                # print('dA'+str(i-1),dAiPrevious)
+                self.grads['dZ'+str(i-1)] = dAiPrevious * self.derivative[i-1](AiPrevious) # don't forget multiple dAiPrevious
+                # print('dZ'+str(i-1),self.grads['dZ'+str(i-1)])
+                
             
     def updateParameters(self,learningRate):
         for i in range(1,self.L+1):
@@ -96,22 +99,37 @@ class NN:
         """
         lostFunction : (AL,Y) -> cost{i}
         """
-        dataSize = self.Y.shape[1] # training data size
-        assert(self.Y.shape[1] == dataSize)
-        self.Y.astype(float)
-        losts = self.lostFunction(self.caches['A'+str(self.L)],self.Y)
-        cost = np.sum(losts) / dataSize # sum(cost{i}) -> cost
+        if AL is None:AL = self.caches['A'+str(self.L)]
+        if Y  is None:Y = self.Y
+        if lostFunction is None:lostFunction=self.lostFunction 
+        dataSize = Y.shape[1]
+        assert(AL.shape == Y.shape),"AL\'s shape is not same as Y\'s"
+        losts = lostFunction(AL,Y)
+        cost = np.sum(losts) / dataSize
         assert(cost.shape == ())
         return cost
+        # dataSize = self.Y.shape[1] # training data size
+        # assert(self.Y.shape[1] == dataSize)
+        # self.Y.astype(float)
+        # losts = self.lostFunction(self.caches['A'+str(self.L)],self.Y)
+        # cost = np.sum(losts) / dataSize # sum(cost{i}) -> cost
+        # assert(cost.shape == ())
+        # return cost
 
-    def predict(self,X):# it's not general for predict
+    def predict(self,parameters = None,X = None,activation = None):# it's not general for predict
         # compute A{L}
         A = X
+        if not parameters: parameters = self.parameters
+        if not X: A = self
+        if not activation: activation = self.activation
         for i in range(1,self.L+1):
-            Wi = self.parameters['W'+str(i)]
-            bi = self.parameters['b'+str(i)]
+            Wi,bi = parameters['W'+str(i)],parameters['b'+str(i)]
             Zi = np.dot(Wi,A) + bi
-            A  = self.activation[i](Zi)
+            A = activation[i](Zi)
+            # Wi = self.parameters['W'+str(i)]
+            # bi = self.parameters['b'+str(i)]
+            # Zi = np.dot(Wi,A) + bi
+            # A  = self.activation[i](Zi)
         # assert(A.shape == self.Y.shape),'the shape of prediction is not correct'+'\nA\'s shape:'+str(A.shape)+'\nY\'s shape'+str(Y.shape)+'\n'
         return np.where(A<=0.5,0.,1.)
 
@@ -120,18 +138,16 @@ class NN:
         situation = prediction == label
         return np.sum(situation)/situation.size
 
-    def train(self,learningRate,times,printCost = None):
+    def train(self,learningRate,trainTimes,printCost = None):
         assert(type(learningRate)==float),'learningRate is not float'
-        assert(type(times)==int),'train times is not int'
-        for i in range(times):
+        assert(type(trainTimes)==int),'train times is not int'
+        for i in range(trainTimes):
             self.forwardPropagation()
             self.backwardPropagation()
             self.updateParameters(learningRate)
-            if printCost:
-                assert(type(printCost)==int),'printCost is not int'
-                if (i % printCost == 0):
+            if type(printCost)==int and i % printCost == 0:
                     print('cost after',str(i),'iteration:',self.computeCost())
-        print('train accuracy:',self.accuracy(self.predict(self.data['trainX']),self.data['trainY'])*100,'%')
+        # print('train accuracy:',self.accuracy(self.predict(self.data['trainX']),self.data['trainY'])*100,'%')
         # print('test  accuracy:',self.accuracy(self.predict(self.data['testX']),self.data['testY'])*100,'%')
 
 if __name__ == 'main':
