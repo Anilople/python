@@ -62,9 +62,10 @@ class NN:
 
     def backwardOneLayer(self,dZi,Wi,AiPrevious): # Zi = Wi * A_pre + bi
         # cost = sum(lost{i})/dataSize , {i} mean the i-th train data
-        dWi = np.dot(dZi,AiPrevious.T)
+        dataSize = dZi.shape[1] 
+        dWi = np.dot(dZi,AiPrevious.T)/dataSize
         dAiPrevious = np.dot(Wi.T,dZi)
-        dbi = np.sum(dZi,axis=1,keepdims=True) # so dbi{j} = sum(dZi{j})
+        dbi = np.sum(dZi,axis=1,keepdims=True)/dataSize # so dbi{j} = sum(dZi{j})
         assert(dWi.shape == Wi.shape)
         return dWi,dAiPrevious,dbi
 
@@ -72,7 +73,7 @@ class NN:
         dataSize = self.Y.shape[1]
         # compute dZL
         ZL,AL,Y = self.caches['Z'+str(self.L)],self.caches['A'+str(self.L)],self.Y
-        dZL = 1/dataSize * self.derivative[self.L](ZL,AL,Y) # watch here
+        dZL = self.derivative[self.L](ZL,AL,Y) # watch here
         self.grads['dZ'+str(self.L)] = dZL # add dZ{L} to gradient
         # print('dZ'+str(self.L),dZL)
         for i in reversed(range(1,self.L+1)):
