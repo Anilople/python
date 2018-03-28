@@ -54,17 +54,15 @@ class NN:
             Wi = self.parameters['W'+str(i)]
             AiPrevious = self.caches['A'+str(i-1)] # !! i-1 not i
             bi = self.parameters['b'+str(i)]
-            # Zi = np.dot(Wi,AiPrevious) + bi # compute Zi
-            # self.caches['Z'+str(i)] = Zi # change Zi
-            # Ai = self.activation[i](Zi) # compute Ai
-            # self.caches['A'+str(i)] = Ai # change Ai
             self.caches['Z'+str(i)],self.caches['A'+str(i)] = self.forwardOneLayer(Wi,AiPrevious,bi,self.activation[i])
 
-    def backwardOneLayer(self,dZi,Wi,AiPrevious): # Zi = Wi * A_pre + bi
+    def backwardOneLayer(self,dZi,Wi,AiPrevious,compute_dAiPrevious = True): # Zi = Wi * A_pre + bi
         # cost = sum(lost{i})/dataSize , {i} mean the i-th train data
         dataSize = dZi.shape[1] 
         dWi = np.dot(dZi,AiPrevious.T)/dataSize
-        dAiPrevious = np.dot(Wi.T,dZi)
+        dAiPrevious = None # according compute_dAiPrevious' value to decide whether to compute dAiPrevious
+        # since AiPrevious == A0, there are meanless or cost too much resource
+        if compute_dAiPrevious:dAiPrevious = np.dot(Wi.T,dZi)
         dbi = np.sum(dZi,axis=1,keepdims=True)/dataSize # so dbi{j} = sum(dZi{j})
         assert(dWi.shape == Wi.shape)
         return dWi,dAiPrevious,dbi
@@ -75,12 +73,11 @@ class NN:
         ZL,AL,Y = self.caches['Z'+str(self.L)],self.caches['A'+str(self.L)],self.Y
         dZL = self.derivative[self.L](ZL,AL,Y) # watch here
         self.grads['dZ'+str(self.L)] = dZL # add dZ{L} to gradient
-        # print('dZ'+str(self.L),dZL)
         for i in reversed(range(1,self.L+1)):
             dZi = self.grads['dZ'+str(i)]
             Wi, AiPrevious, bi = self.parameters['W'+str(i)], self.caches['A'+str(i-1)], self.parameters['b'+str(i)]
             assert(dZi.shape[0] == bi.shape[0]),'dZi.shape[0] != bi.shape[0]'
-            dWi,dAiPrevious,dbi = self.backwardOneLayer(dZi,Wi,AiPrevious) # compute gradient of Wi,bi
+            dWi,dAiPrevious,dbi = self.backwardOneLayer(dZi,Wi,AiPrevious,i>1) # compute gradient of Wi,bi
             # add gradient in self.grads
             self.grads['dW'+str(i)] = dWi
             self.grads['db'+str(i)] = dbi
