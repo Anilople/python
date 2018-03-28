@@ -28,7 +28,7 @@ class NN:
         # Wi, bi
         self.parameters={}
         for i in range(1,self.L+1):
-            self.parameters['W'+str(i)] = np.random.randn(layers[i],layers[i-1]) * 0.01
+            self.parameters['W'+str(i)] = np.random.randn(layers[i],layers[i-1]) / np.sqrt(layers[i-1]) # * 0.01 # 
             self.parameters['b'+str(i)] = np.zeros((layers[i],1))  
         # function
         self.function = function
@@ -84,7 +84,7 @@ class NN:
             if i > 1 : # since there are no dA0 and dZ0
                 self.grads['dA'+str(i-1)] = dAiPrevious
                 # print('dA'+str(i-1),dAiPrevious)
-                self.grads['dZ'+str(i-1)] = dAiPrevious * self.derivative[i-1](AiPrevious) # don't forget multiple dAiPrevious
+                self.grads['dZ'+str(i-1)] = dAiPrevious * self.derivative[i-1](self.caches['Z'+str(i-1)],AiPrevious) # don't forget multiple dAiPrevious
                 # print('dZ'+str(i-1),self.grads['dZ'+str(i-1)])
                 
             
