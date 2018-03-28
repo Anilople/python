@@ -59,11 +59,11 @@ class NN:
     def backwardOneLayer(self,dZi,Wi,AiPrevious,compute_dAiPrevious = True): # Zi = Wi * A_pre + bi
         # cost = sum(lost{i})/dataSize , {i} mean the i-th train data
         dataSize = dZi.shape[1] 
-        dWi = np.dot(dZi,AiPrevious.T)/dataSize
+        dWi = np.dot(dZi,AiPrevious.T)#/dataSize
         dAiPrevious = None # according compute_dAiPrevious' value to decide whether to compute dAiPrevious
         # since AiPrevious == A0, there are meanless or cost too much resource
         if compute_dAiPrevious:dAiPrevious = np.dot(Wi.T,dZi)
-        dbi = np.sum(dZi,axis=1,keepdims=True)/dataSize # so dbi{j} = sum(dZi{j})
+        dbi = np.sum(dZi,axis=1,keepdims=True)#/dataSize # so dbi{j} = sum(dZi{j})
         assert(dWi.shape == Wi.shape)
         return dWi,dAiPrevious,dbi
 
@@ -71,7 +71,7 @@ class NN:
         dataSize = self.Y.shape[1]
         # compute dZL
         ZL,AL,Y = self.caches['Z'+str(self.L)],self.caches['A'+str(self.L)],self.Y
-        dZL = self.derivative[self.L](ZL,AL,Y) # watch here
+        dZL = 1/dataSize * self.derivative[self.L](ZL,AL,Y) # watch here
         self.grads['dZ'+str(self.L)] = dZL # add dZ{L} to gradient
         for i in reversed(range(1,self.L+1)):
             dZi = self.grads['dZ'+str(i)]
