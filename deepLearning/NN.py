@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 class NN:
     def __init__(self,data,layers,function):
