@@ -128,17 +128,21 @@ class NN:
         if accuracyFunction is None: accuracyFunction = self.function['accuracyFunction']
         return accuracyFunction(predictions,labels) # take 2 parameters
 
-    def train(self,learningRate,trainTimes,printCost = None):
+    def train(self,learningRate,trainTimes,printCostTimes = None):
         assert(type(learningRate)==float),'learningRate is not float'
         assert(type(trainTimes)==int),'train times is not int'
+        costs = [] # save every printCostTimes
         for i in range(trainTimes):
             self.forwardPropagation()
             self.backwardPropagation()
             self.updateParameters(learningRate)
-            if type(printCost)==int and i % printCost == 0:
-                    print('cost after',str(i),'iteration:',self.computeCost())
+            if type(printCostTimes)==int and i % printCostTimes == 0:
+                cost = self.computeCost()
+                costs.append(cost)
+                print('cost after',str(i),'iteration:',cost)
         # print('train accuracy:',self.accuracy(self.predict(self.data['trainX']),self.data['trainY'])*100,'%')
         # print('test  accuracy:',self.accuracy(self.predict(self.data['testX']),self.data['testY'])*100,'%')
+        return costs
 
 if __name__ == 'main':
     pass
