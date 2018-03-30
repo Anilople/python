@@ -140,8 +140,6 @@ class NN:
                 cost = self.computeCost()
                 costs.append(cost)
                 print('cost after',str(i),'iteration:',cost)
-        # print('train accuracy:',self.accuracy(self.predict(self.data['trainX']),self.data['trainY'])*100,'%')
-        # print('test  accuracy:',self.accuracy(self.predict(self.data['testX']),self.data['testY'])*100,'%')
         return costs
 
 if __name__ == 'main':
