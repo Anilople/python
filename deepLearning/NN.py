@@ -115,23 +115,20 @@ class NN:
         # assert(cost.shape == ())
         # return cost
 
-    def predict(self,parameters = None,X = None,activation = None):# it's not general for predict
+    def predict(self,parameters = None,X = None,activation = None,predictFunction = None):# it's not general for predict
         # compute A{L}
-        A = X
+        A = X # input data
+        # is optional parameter is None, use class's function build in
         if parameters is None: parameters = self.parameters
         if X is None: A = self.caches['A0']
         if activation is None: activation = self.activation
+        if predictFunction is None: predictFunction = self.self.function['predictFunction']
+        # compute the last layer, i.e A[L]
         for i in range(1,self.L+1):
             Wi,bi = parameters['W'+str(i)],parameters['b'+str(i)]
             Zi = np.dot(Wi,A) + bi
             A = activation[i](Zi)
-            # Wi = self.parameters['W'+str(i)]
-            # bi = self.parameters['b'+str(i)]
-            # Zi = np.dot(Wi,A) + bi
-            # A  = self.activation[i](Zi)
-        # assert(A.shape == self.Y.shape),'the shape of prediction is not correct'+'\nA\'s shape:'+str(A.shape)+'\nY\'s shape'+str(Y.shape)+'\n'
-        # return np.where(A<=0.5,0.,1.)
-        return self.function['predictFunction'](A)
+        return predictFunction(A)
 
     def accuracy(self,predictions,labels):
         assert(predictions.shape == labels.shape),'There is diffrence between prediction\'shape and label\'shape.'
