@@ -96,27 +96,20 @@ class NN:
 
     def computeCost(self,AL=None,Y=None,lostFunction=None):
         """
-        lostFunction : (AL,Y) -> cost{i}
+        lostFunction : (A[L]{i},Y{i}) -> cost{i}
         """
         if AL is None:AL = self.caches['A'+str(self.L)]
         if Y  is None:Y = self.Y
         if lostFunction is None:lostFunction=self.lostFunction 
         dataSize = Y.shape[1]
-        assert(AL.shape == Y.shape),"AL\'s shape is not same as Y\'s"
+        assert(AL.shape == Y.shape),"AL.shape != Y.shape"
         losts = lostFunction(AL,Y)
         cost = np.sum(losts) / dataSize
         assert(cost.shape == ())
         return cost
-        # dataSize = self.Y.shape[1] # training data size
-        # assert(self.Y.shape[1] == dataSize)
-        # self.Y.astype(float)
-        # losts = self.lostFunction(self.caches['A'+str(self.L)],self.Y)
-        # cost = np.sum(losts) / dataSize # sum(cost{i}) -> cost
-        # assert(cost.shape == ())
-        # return cost
 
     def predict(self,parameters = None,X = None,activation = None,predictFunction = None):# it's not general for predict
-        # compute A{L}
+        # compute A[L]
         A = X # input data
         # is optional parameter is None, use class's function build in
         if parameters is None: parameters = self.parameters
