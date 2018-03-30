@@ -115,7 +115,7 @@ class NN:
         if parameters is None: parameters = self.parameters
         if X is None: A = self.caches['A0']
         if activation is None: activation = self.activation
-        if predictFunction is None: predictFunction = self.self.function['predictFunction']
+        if predictFunction is None: predictFunction = self.function['predictFunction']
         # compute the last layer, i.e A[L]
         for i in range(1,self.L+1):
             Wi,bi = parameters['W'+str(i)],parameters['b'+str(i)]
