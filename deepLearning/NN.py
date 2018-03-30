@@ -130,10 +130,10 @@ class NN:
             A = activation[i](Zi)
         return predictFunction(A)
 
-    def accuracy(self,predictions,labels):
-        assert(predictions.shape == labels.shape),'There is diffrence between prediction\'shape and label\'shape.'
-        situation = predictions == labels
-        return np.sum(situation)/situation.size
+    def accuracy(self,predictions,labels,accuracyFunction = None):
+        assert(predictions.shape == labels.shape),'prediction.shape != labels.shape'
+        if accuracyFunction is None: accuracyFunction = self.function['accuracyFunction']
+        return accuracyFunction(predictions,labels) # take 2 parameters
 
     def train(self,learningRate,trainTimes,printCost = None):
         assert(type(learningRate)==float),'learningRate is not float'
