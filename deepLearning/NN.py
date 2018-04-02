@@ -73,24 +73,30 @@ class NN:
         assert(dWi.shape == Wi.shape)
         return dWi,dAiPrevious,dbi
 
-    def backwardPropagation(self):
-        dataSize = self.Y.shape[1]
+    def backwardPropagation(self,parameters = None,caches = None, grads = None, derivative = None, L = None, Y = None):
+        if parameters is None: parameters = self.parameters
+        if caches is None: caches = self.caches
+        if grads is None: grads = self.grads
+        if derivative is None: derivative = self.derivative
+        if L is None: L = self.L
+        if Y is None: Y = self.Y
+        dataSize = Y.shape[1]
         # compute dZL
-        ZL,AL,Y = self.caches['Z'+str(self.L)],self.caches['A'+str(self.L)],self.Y
-        dZL = 1/dataSize * self.derivative[self.L](ZL,AL,Y) # watch here
-        self.grads['dZ'+str(self.L)] = dZL # add dZ{L} to gradient
-        for i in reversed(range(1,self.L+1)):
-            dZi = self.grads['dZ'+str(i)]
-            Wi, AiPrevious, bi = self.parameters['W'+str(i)], self.caches['A'+str(i-1)], self.parameters['b'+str(i)]
+        ZL,AL,Y = caches['Z'+str(L)],caches['A'+str(L)],Y
+        dZL = 1/dataSize * derivative[L](ZL,AL,Y) # watch here
+        grads['dZ'+str(L)] = dZL # add dZ{L} to gradient
+        for i in reversed(range(1,L+1)):
+            dZi = grads['dZ'+str(i)]
+            Wi, AiPrevious, bi = parameters['W'+str(i)], caches['A'+str(i-1)], parameters['b'+str(i)]
             assert(dZi.shape[0] == bi.shape[0]),'dZi.shape[0] != bi.shape[0]'
             dWi,dAiPrevious,dbi = self.backwardOneLayer(dZi,Wi,AiPrevious,i>1) # compute gradient of Wi,bi
             # add gradient in self.grads
-            self.grads['dW'+str(i)] = dWi
-            self.grads['db'+str(i)] = dbi
+            grads['dW'+str(i)] = dWi
+            grads['db'+str(i)] = dbi
             if i > 1 : # since there are no dA0 and dZ0
-                self.grads['dA'+str(i-1)] = dAiPrevious
+                grads['dA'+str(i-1)] = dAiPrevious
                 # print('dA'+str(i-1),dAiPrevious)
-                self.grads['dZ'+str(i-1)] = dAiPrevious * self.derivative[i-1](self.caches['Z'+str(i-1)],AiPrevious) # don't forget multiple dAiPrevious
+                grads['dZ'+str(i-1)] = dAiPrevious * derivative[i-1](caches['Z'+str(i-1)],AiPrevious) # don't forget multiple dAiPrevious
                 # print('dZ'+str(i-1),self.grads['dZ'+str(i-1)])
                 
             
