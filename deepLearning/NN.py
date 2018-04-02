@@ -89,10 +89,12 @@ class NN:
                 # print('dZ'+str(i-1),self.grads['dZ'+str(i-1)])
                 
             
-    def updateParameters(self,learningRate):
+    def updateParameters(self,learningRate,parameters = None,grads = None):
+        if parameters is None: parameters = self.parameters
+        if grads is None: grads = self.grads
         for i in range(1,self.L+1):
-            self.parameters["W" + str(i)] -= learningRate * self.grads['dW'+str(i)]
-            self.parameters["b" + str(i)] -= learningRate * self.grads['db'+str(i)]
+            parameters["W" + str(i)] -= learningRate * grads['dW'+str(i)]
+            parameters["b" + str(i)] -= learningRate * grads['db'+str(i)]
 
     def computeCost(self,AL=None,Y=None,lostFunction=None):
         """
