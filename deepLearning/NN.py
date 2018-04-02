@@ -50,12 +50,17 @@ class NN:
         Ai = activation(Zi)
         return Zi,Ai
 
-    def forwardPropagation(self):
-        for i in range(1,self.L+1):
-            Wi = self.parameters['W'+str(i)]
-            AiPrevious = self.caches['A'+str(i-1)] # !! i-1 not i
-            bi = self.parameters['b'+str(i)]
-            self.caches['Z'+str(i)],self.caches['A'+str(i)] = self.forwardOneLayer(Wi,AiPrevious,bi,self.activation[i])
+    def forwardPropagation(self,parameters = None, activation = None, caches = None,L = None):
+        # L is the number of layers
+        if parameters is None: parameters = self.parameters
+        if activation is None: activation = self.activation
+        if caches is None: caches = self.caches
+        if L is None: L = self.L
+        for i in range(1,L+1):
+            Wi = parameters['W'+str(i)]
+            AiPrevious = caches['A'+str(i-1)] # !! i-1 not i
+            bi = parameters['b'+str(i)]
+            caches['Z'+str(i)],caches['A'+str(i)] = self.forwardOneLayer(Wi,AiPrevious,bi,activation[i])
 
     def backwardOneLayer(self,dZi,Wi,AiPrevious,compute_dAiPrevious = True): # Zi = Wi * A_pre + bi
         # cost = sum(lost{i})/dataSize , {i} mean the i-th train data
