@@ -100,11 +100,13 @@ class NN:
                 # print('dZ'+str(i-1),self.grads['dZ'+str(i-1)])
                 
             
-    def updateParameters(self,learningRate,parameters = None,grads = None):
+    def updateParameters(self,learningRate,parameters = None,grads = None,lambd = 0.001):
+        # lambd is L2 regularization
         if parameters is None: parameters = self.parameters
         if grads is None: grads = self.grads
+        dataSize = self.caches['A0'].shape[1] # get dataSize for L2 regularization
         for i in range(1,self.L+1):
-            parameters["W" + str(i)] -= learningRate * grads['dW'+str(i)]
+            parameters["W" + str(i)] -= learningRate * grads['dW'+str(i)] + parameters["W" + str(i)] * (lambd / dataSize)
             parameters["b" + str(i)] -= learningRate * grads['db'+str(i)]
 
     def computeCost(self,AL=None,Y=None,lostFunction=None):
