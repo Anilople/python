@@ -152,6 +152,25 @@ class NN:
         self.forwardPropagation()
         self.backwardPropagation()
         self.updateParameters(learningRate)
+    
+    def miniBatch(self,learningRate, batchSize, getCost = False):
+        # epoch with mini batch
+        dataSize = self.Y.shape[1]
+        print('dataSize:',dataSize)
+        permutation = np.random.permutation(dataSize)
+        shuffledX = self.caches['A0'][:,permutation]
+        shuffledY = self.Y[:,permutation]
+        # if dataSize = 9, batchSize = 4, since 4 + 4 + 1 = 9, so first train 4, next train 4, no train 1
+        costs = []
+        batchI = 0
+        while batchI * batchSize + batchSize <= dataSize:
+            miniX = shuffledX[:,batchI * batchSize:batchI * batchSize + batchSize]
+            miniY = shuffledY[:,batchI * batchSize:batchI * batchSize + batchSize]
+            print('data range:',batchI * batchSize,'--',batchI * batchSize + batchSize)
+            self.oneBatch(learningRate,X = miniX,Y = miniY) # with side effect!!
+            batchI += 1 # update batch index
+            if getCost: costs.append(self.computeCost())
+        return costs
 
     def train(self,learningRate,trainTimes,printCostTimes = None):
         assert(type(learningRate)==float),'learningRate is not float'
