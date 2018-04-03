@@ -156,7 +156,7 @@ class NN:
     def miniBatch(self,learningRate, batchSize, getCost = False):
         # epoch with mini batch
         dataSize = self.Y.shape[1]
-        print('dataSize:',dataSize)
+        # print('dataSize:',dataSize)
         permutation = np.random.permutation(dataSize)
         shuffledX = self.caches['A0'][:,permutation]
         shuffledY = self.Y[:,permutation]
@@ -166,7 +166,7 @@ class NN:
         while batchI * batchSize + batchSize <= dataSize:
             miniX = shuffledX[:,batchI * batchSize:batchI * batchSize + batchSize]
             miniY = shuffledY[:,batchI * batchSize:batchI * batchSize + batchSize]
-            print('data range:',batchI * batchSize,'--',batchI * batchSize + batchSize)
+            # print('data range:',batchI * batchSize,'--',batchI * batchSize + batchSize)
             self.oneBatch(learningRate,X = miniX,Y = miniY) # with side effect!!
             batchI += 1 # update batch index
             if getCost: costs.append(self.computeCost())
