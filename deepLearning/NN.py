@@ -29,7 +29,7 @@ class NN:
         # Wi, bi
         self.parameters={}
         for i in range(1,self.L+1):
-            self.parameters['W'+str(i)] = np.random.randn(layers[i],layers[i-1]) / np.sqrt(layers[i-1]) # * 0.01 # 
+            self.parameters['W'+str(i)] = np.random.randn(layers[i],layers[i-1]) * np.sqrt(2 / layers[i-1]) # * 0.01 # 
             self.parameters['b'+str(i)] = np.zeros((layers[i],1))  
         # function
         self.function = function
