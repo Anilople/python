@@ -141,14 +141,24 @@ class NN:
         if accuracyFunction is None: accuracyFunction = self.function['accuracyFunction']
         return accuracyFunction(predictions,labels) # take 2 parameters
 
+    def oneBatch(self,learningRate,X = None, Y = None):
+        # X is train data
+        # Y is train label
+        assert(type(learningRate) == float),'learningRate is not a float'
+        if X is None: X = self.caches['A0']
+        if Y is None: Y = self.Y
+        self.caches['A0'] = X
+        self.Y = Y
+        self.forwardPropagation()
+        self.backwardPropagation()
+        self.updateParameters(learningRate)
+
     def train(self,learningRate,trainTimes,printCostTimes = None):
         assert(type(learningRate)==float),'learningRate is not float'
         assert(type(trainTimes)==int),'train times is not int'
         costs = [] # save every printCostTimes
         for i in range(trainTimes):
-            self.forwardPropagation()
-            self.backwardPropagation()
-            self.updateParameters(learningRate)
+            self.oneBatch(learningRate) # use one batch to train one time
             if type(printCostTimes)==int and i % printCostTimes == 0:
                 cost = self.computeCost()
                 costs.append(cost)
