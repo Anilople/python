@@ -156,7 +156,7 @@ class NN:
     def miniBatch(self,learningRate, batchSize, getCost = False):
         # epoch with mini batch
         dataSize = self.data['trainY'].shape[1]
-        print('dataSize:',dataSize)
+        # print('dataSize:',dataSize)
         permutation = np.random.permutation(dataSize)
         shuffledX = self.data['trainX'][:,permutation]
         shuffledY = self.data['trainY'][:,permutation]
@@ -166,10 +166,26 @@ class NN:
         while batchI * batchSize + batchSize <= dataSize:
             miniX = shuffledX[:,batchI * batchSize:batchI * batchSize + batchSize]
             miniY = shuffledY[:,batchI * batchSize:batchI * batchSize + batchSize]
-            print('data range:',batchI * batchSize,'--',batchI * batchSize + batchSize)
+            # print('data range:',batchI * batchSize,'--',batchI * batchSize + batchSize)
             self.oneBatch(learningRate,X = miniX,Y = miniY) # with side effect!!
             batchI += 1 # update batch index
             if getCost: costs.append(self.computeCost())
+        return costs
+
+    def miniBatchRandom(self,learningRate, batchSize, batchTimes, getCost = False):
+        # batchTimes -- use batchSize's data to train batchTimes times
+        dataSize = self.data['trainY'].shape[1]
+        # print('dataSize:',dataSize)
+        costs = []
+        for i in range(batchTimes): # every time choose batchSize's data form train data randomly
+            permutation = np.random.permutation(dataSize)[:batchSize]
+            # print('permutation.shape:',permutation.shape)
+            # print(permutation)
+            miniX = self.data['trainX'][:,permutation]
+            miniY = self.data['trainY'][:,permutation]
+            self.oneBatch(learningRate = learningRate,X = miniX, Y = miniY)
+            if getCost:
+                costs.append(self.computeCost())
         return costs
 
     def train(self,learningRate,trainTimes,printCostTimes = None):
