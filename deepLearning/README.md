@@ -79,7 +79,7 @@ function = {
 def miniBatchRandom(self,learningRate, batchSize, batchTimes, getCost = False):
 ```
 
-####learningRate
+#### learningRate
 
 学习率
 
