@@ -1,6 +1,29 @@
 import numpy as np
 import random
 
+
+relu = lambda z:np.maximum(0.01 * z,z) # Relu 激活函数
+relu_deriv = lambda z,a:np.where(z > 0,1.0,0.01) # Relu 激活函数的导数
+sigmoid = lambda z:1/(1+np.exp(-z)) # sigmoid 激活函数
+sigmoid_deriv = lambda z,a:np.multiply(a,1-a) # sigmoid 激活函数的导数
+
+def lostFunc(A,Y): # cross entropy lost function
+    assert(A.shape == Y.shape),'A.shape != Y.shape'
+    # A and Y are matrix, but we just want to operation on column, so use axis = 0
+    ylna = np.multiply(Y,np.log(A+1e-10)) # add 1e-10 to forbidden np.log(0)
+    return -np.sum(ylna,axis = 0,keepdims=True) # remember add minus symbol "-"
+
+def softmax(Z): # Z is a column vector, but we need to handle when Z is a matrix, use axis = 0
+    maxNumber = np.max(Z,axis = 0,keepdims=True)
+    assert(Z.shape[1] == maxNumber.shape[1])
+    Z -= maxNumber
+    Zexp = np.exp(Z)
+    return Zexp / np.sum(Zexp,axis = 0,keepdims=True)
+
+def softmax_deriv(Z,A,Y): # softmax 的导数
+    assert(A.shape == Y.shape),'A.shape is not same as Y.shape'
+    return A - Y
+
 class NN:
     def __init__(self,data,layers,function):
         """
