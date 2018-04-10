@@ -84,7 +84,7 @@ class NN:
             AiPrevious = caches['A'+str(i-1)] # !! i-1 not i
             bi = parameters['b'+str(i)]
             caches['Z'+str(i)],caches['A'+str(i)] = self.forwardOneLayer(Wi,AiPrevious,bi,activation[i])
-
+            
     def backwardOneLayer(self,dZi,Wi,AiPrevious,compute_dAiPrevious = True): # Zi = Wi * A_pre + bi
         # cost = sum(lost{i})/dataSize , {i} mean the i-th train data
         dataSize = dZi.shape[1] 
@@ -145,6 +145,20 @@ class NN:
         cost = np.sum(losts) / dataSize
         assert(cost.shape == ())
         return cost
+
+    def computeCostWithL2(self,AL=None,Y=None,lostFunction=None,lambd = 0.001):
+        """
+        lostFunction : (A[L]{i},Y{i}) -> cost{i}
+        """
+        cost = self.computeCost(AL,Y,lostFunction)
+        Y = Y or self.Y
+        m = Y.shape[1] # number of data
+        L2cost = 0
+        for key in self.parameters:
+            if key[0] == 'W':
+                L2cost += np.sum( lambd / 2 / m * np.power(self.parameters[key],2) )
+        print('L2cost:',L2cost)
+        return cost + L2cost
 
     def predict(self,parameters = None,X = None,activation = None,predictFunction = None):# it's not general for predict
         # compute A[L]
@@ -210,7 +224,7 @@ class NN:
             miniY = self.data['trainY'][:,permutation]
             self.oneBatch(learningRate = learningRate,X = miniX, Y = miniY)
             if getCost:
-                costs.append(self.computeCost())
+                costs.append(self.computeCostWithL2()) # watch out here, the function to compute cost
         return costs
 
     def train(self,learningRate,trainTimes,printCostTimes = None):
