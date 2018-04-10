@@ -88,11 +88,11 @@ class NN:
 
     def forwardPropagation(self,parameters = None, activation = None, caches = None,L = None,hyperParameters = None):
         # L is the number of layers
-        if parameters is None: parameters = self.parameters
-        if activation is None: activation = self.activation
-        if caches is None: caches = self.caches
-        if L is None: L = self.L
-        if hyperParameters is None: hyperParameters = self.hyperParameters
+        parameters = parameters or self.parameters
+        activation = activation or self.activation
+        caches = caches or self.caches
+        L = L or self.L
+        hyperParameters = hyperParameters or self.hyperParameters
         for i in range(1,L+1):
             Wi = parameters['W'+str(i)]
             AiPrevious = caches['A'+str(i-1)] # !! i-1 not i
@@ -147,7 +147,8 @@ class NN:
 
                 # --- handle dropout about
                 if hyperParameters['open-dropout']:
-                    grads['dA'+str(i-1)] = np.multiply(grads['dA'+str(i-1)],caches['D'+str(i)]) / hyperParameters['dropout']
+                    print('haha')
+                    grads['dA'+str(i-1)] = np.multiply(grads['dA'+str(i-1)],caches['D'+str(i-1)]) / hyperParameters['dropout']
                 
             
     def updateParameters(self,learningRate,parameters = None,grads = None):
