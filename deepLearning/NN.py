@@ -118,13 +118,14 @@ class NN:
         assert(dWi.shape == Wi.shape)
         return dWi,dAiPrevious,dbi
 
-    def backwardPropagation(self,parameters = None,caches = None, grads = None, derivative = None, L = None, Y = None):
+    def backwardPropagation(self,parameters = None,caches = None, grads = None, derivative = None, L = None, Y = None,hyperParameters = None):
         if parameters is None: parameters = self.parameters
         if caches is None: caches = self.caches
         if grads is None: grads = self.grads
         if derivative is None: derivative = self.derivative
         if L is None: L = self.L
         if Y is None: Y = self.Y
+        if hyperParameters is None: hyperParameters = self.hyperParameters
         dataSize = Y.shape[1]
         # compute dZL
         ZL,AL,Y = caches['Z'+str(L)],caches['A'+str(L)],Y
@@ -143,6 +144,10 @@ class NN:
                 # print('dA'+str(i-1),dAiPrevious)
                 grads['dZ'+str(i-1)] = dAiPrevious * derivative[i-1](caches['Z'+str(i-1)],AiPrevious) # don't forget multiple dAiPrevious
                 # print('dZ'+str(i-1),self.grads['dZ'+str(i-1)])
+
+                # --- handle dropout about
+                if hyperParameters['open-dropout']:
+                    grads['dA'+str(i-1)] = np.multiply(grads['dA'+str(i-1)],caches['D'+str(i)]) / hyperParameters['dropout']
                 
             
     def updateParameters(self,learningRate,parameters = None,grads = None):
