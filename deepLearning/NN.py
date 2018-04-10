@@ -25,7 +25,7 @@ def softmax_deriv(Z,A,Y): # softmax 的导数
     return A - Y
 
 class NN:
-    def __init__(self,data,layers,function):
+    def __init__(self,data,layers, function,hyperParameters = {}):
         """
         data -- dict
             data['trainX']
@@ -34,16 +34,16 @@ class NN:
                     layers[0] = n_x -- size of input
                     len(layers)-1 is the number of layers, i.e. (n_h + 1) = L
                     layers[-1] = n_y -- size of output
-        parameters -- python dictionary containing your parameters:                   
-                        Wi -- weight matrix of shape (layers[i], layers[i-1]), LEFT MUL
-                        bi -- bias vector of shape (layers[i], 1)
         function -- dict
                  -- activation: dict. Zi -> Ai
                  -- derivative: dict. dAi -> dZi
                  -- lostFunction: (AL,Y) -> cost_i
+        hyperParameters -- L2 -- lambda
+                            dropout
         """
         assert(isinstance(data,dict)),'data is not a dict'
         assert(isinstance(layers,list)),'layers is not a list'
+        assert(isinstance(hyperParameters,dict)),'hyper parameters is not a dict'
 
         self.data = data
         self.caches = {'A0':data['trainX']} # save Zi = WiAi+bi and Ai, denote A0 = trainX
@@ -60,7 +60,20 @@ class NN:
         self.derivative = function['derivative']
         self.lostFunction = function['lostFunction']
         self.grads = {} # save gradients of Wi,bi in the network
-    
+
+        if 'lambda' not in hyperParameters.keys(): # set default L2 value 0.001
+            hyperParameters['lambda'] = 0.001
+        if 'dropout' not in hyperParameters.keys(): # set default dropout value 0.5
+            hyperParameters['dropout'] = 0.5
+        hyperParameters['open-dropout'] = 'open-dropout' in hyperParameters.keys() # set open-dropout True if exist, other False
+
+        print('L2 regularition: lambda =',hyperParameters['lambda'])
+        print('open-dropout:',hyperParameters['open-dropout'])
+        if hyperParameters['open-dropout']:
+            print('Dropout: keep probility is',hyperParameters['dropout'])
+
+        self.hyperParameters = hyperParameters
+
     def __str__(self):
         data = repr(self.data) + '\n' + '-'*20 + '\n'
         caches = repr(self.caches) + '\n' + '-'*20 + '\n'
@@ -73,17 +86,26 @@ class NN:
         Ai = activation(Zi)
         return Zi,Ai
 
-    def forwardPropagation(self,parameters = None, activation = None, caches = None,L = None):
+    def forwardPropagation(self,parameters = None, activation = None, caches = None,L = None,hyperParameters = None):
         # L is the number of layers
         if parameters is None: parameters = self.parameters
         if activation is None: activation = self.activation
         if caches is None: caches = self.caches
         if L is None: L = self.L
+        if hyperParameters is None: hyperParameters = self.hyperParameters
         for i in range(1,L+1):
             Wi = parameters['W'+str(i)]
             AiPrevious = caches['A'+str(i-1)] # !! i-1 not i
             bi = parameters['b'+str(i)]
             caches['Z'+str(i)],caches['A'+str(i)] = self.forwardOneLayer(Wi,AiPrevious,bi,activation[i])
+            # --- handle about dropout
+            if i < L and hyperParameters['open-dropout']:
+                # print('dropout now',hyperParameters['dropout'])
+                Di = np.random.rand(*caches['A'+str(i)].shape) < hyperParameters['dropout']
+                assert(Di.shape == caches['A'+str(i)].shape)
+                caches['A'+str(i)] = np.multiply(caches['A'+str(i)],Di)  / hyperParameters['dropout']
+                caches['D'+str(i)] = Di # add Di for backward propagation
+                
             
     def backwardOneLayer(self,dZi,Wi,AiPrevious,compute_dAiPrevious = True): # Zi = Wi * A_pre + bi
         # cost = sum(lost{i})/dataSize , {i} mean the i-th train data
@@ -123,13 +145,14 @@ class NN:
                 # print('dZ'+str(i-1),self.grads['dZ'+str(i-1)])
                 
             
-    def updateParameters(self,learningRate,parameters = None,grads = None,lambd = 0.001):
+    def updateParameters(self,learningRate,parameters = None,grads = None):
         # lambd is L2 regularization
+        lambd = self.hyperParameters['lambda']
         if parameters is None: parameters = self.parameters
         if grads is None: grads = self.grads
         dataSize = self.caches['A0'].shape[1] # get dataSize for L2 regularization
         for i in range(1,self.L+1):
-            parameters["W" + str(i)] -= learningRate * grads['dW'+str(i)] + parameters["W" + str(i)] * (lambd / dataSize)
+            parameters["W" + str(i)] -= learningRate * grads['dW'+str(i)] + (lambd / dataSize) * parameters["W" + str(i)]
             parameters["b" + str(i)] -= learningRate * grads['db'+str(i)]
 
     def computeCost(self,AL=None,Y=None,lostFunction=None):
@@ -146,18 +169,19 @@ class NN:
         assert(cost.shape == ())
         return cost
 
-    def computeCostWithL2(self,AL=None,Y=None,lostFunction=None,lambd = 0.001):
+    def computeCostWithL2(self,AL=None,Y=None,lostFunction=None):
         """
         lostFunction : (A[L]{i},Y{i}) -> cost{i}
         """
         cost = self.computeCost(AL,Y,lostFunction)
         Y = Y or self.Y
         m = Y.shape[1] # number of data
+        lambd = self.hyperParameters['lambda']
         L2cost = 0
         for key in self.parameters:
             if key[0] == 'W':
                 L2cost += np.sum( lambd / 2 / m * np.power(self.parameters[key],2) )
-        print('L2cost:',L2cost)
+        # print('L2cost:',L2cost)
         return cost + L2cost
 
     def predict(self,parameters = None,X = None,activation = None,predictFunction = None):# it's not general for predict
