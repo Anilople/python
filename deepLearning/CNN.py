@@ -9,8 +9,8 @@ class CNN(NN):
     def convolutionForward(Aprevious, W, b, hyperParameters):
         pad = hyperParameters['pad']
         assert(len(Aprevious.shape) == 4)
-        APad = np.pad(Aprevious, ((0, 0),(pad, pad),(pad, pad),(0, 0)), 'constant', constant_values=0)
-        A = CNN.convolutionForwardWithoutPad(APad, W, b,hyperParameters['stride'])
+        Apad = np.pad(Aprevious, ((0, 0),(pad, pad),(pad, pad),(0, 0)), 'constant', constant_values=0)
+        A = CNN.convolutionForwardWithoutPad(Apad, W, b,hyperParameters['stride'])
         return A
     
     @staticmethod
@@ -39,13 +39,68 @@ class CNN(NN):
                 # print('W shape:',W.shape)
                 # print('b shape:',b.shape)
                 # print('A shape:',A[:,vS:vE,hS:hE,:].shape)
-                ASlice = np.multiply(ApreviousSlice,W) + b# (m, f, f, nCPre, 1) * (f, f, nCpre, nC) + (1, nC) -> (m, f, f, nCpre, nC)
+                ASlice = np.multiply(ApreviousSlice,W) + b # (m, f, f, nCPre, 1) * (f, f, nCpre, nC) + (1, nC) -> (m, f, f, nCpre, nC)
                 ASlice = np.sum(ASlice, axis= (1,2,3)) # (m, nC)
                 A[:,v,h,:] += ASlice # (m, nC) += (m, nC)
         return A
 
-    def convolutionBackward(self):
-        pass
+    @staticmethod
+    def convolutionBackward(Aprevious, dA, W, b,hyperParameters):
+        '''
+        Aprevious   --  (m, nHPre, nWPre, nCpre)
+        dA          --  (m, nH,    nW   , nC   )
+        W           --  (f, f,     nCPre, nC   )
+        b           --  (1, 1,     1,     nC   )
+        '''
+        
+        assert(Aprevious.shape[0] == dA.shape[0]),'m not same in Aprevisous and dA'
+        assert(dA.shape[3] == W.shape[-1]),'number of channel: dA and W is not same'
+        m, nHPre, nWPre, nCPre = Aprevious.shape
+        m, nH, nW, nC = dA.shape
+        f, f, nCPre, nC = W.shape
+
+        pad = hyperParameters['pad']
+        stride = hyperParameters['stride']
+        # print('f:',f)
+        # print('pad:',pad)
+        # print('stride:',stride)
+        assert( int((nHPre - f + 2 * pad) / stride) + 1 == nH)
+        assert( int((nWPre - f + 2 * pad) / stride) + 1 == nW)
+
+        ApreviousPad = np.pad(Aprevious, ((0, 0),(pad, pad),(pad, pad),(0, 0)), 'constant', constant_values=0) # must use it for dW
+
+        dApreviousPad = np.zeros((m, nHPre + 2 * pad, nWPre + 2 * pad, nCPre))
+        dW = np.zeros(W.shape) # (f, f, nCPre, nC)
+        db = np.zeros((1,1,1,nC))
+        for v in range(nH): # vertical
+            for h in range(nW): # horizontal
+                vS = v * stride # vertical start
+                vE = vS + f # vertical end
+                hS = h * stride # horizontal start
+                hE = hS + f # horizontal end
+                
+                dAvh = dA[:,v,h,:] # (m, nC)
+                dAvh = dAvh.reshape(m, 1, 1, 1, nC) # (m, 1, 1, 1, nC)
+
+                # compute dA[i-1]
+                dApreviousPadSlice = np.multiply(dAvh, W) # (m, 1, 1, 1, nC) * (f, f, nCPre, nC) = (m, f, f, nCPre, nC)
+                dApreviousPadSlice = np.sum(dApreviousPadSlice, axis = -1) # zip nC, since ASlice = ApreviousPadSlice * W + b
+                dApreviousPad[:,vS:vE,hS:hE,:] += dApreviousPadSlice
+
+                # compute dW
+                ApreviousPadSlice = ApreviousPad[:,vS:vE,hS:hE,:] # (m, f, f, nCPre)
+                ApreviousPadSlice = ApreviousPadSlice.reshape(m, f, f, nCPre, 1) # reshape for broadcasting
+                dWTemp = np.multiply(dAvh, ApreviousPadSlice) # (m, 1, 1, 1, nC) * (m, f, f, nCPre, 1) = (m, f, f, nCPre, nC)
+                dW += np.sum(dWTemp, axis = 0)
+
+                # compute db
+                db += np.sum(dAvh, axis = 0) # zip number of data
+
+        dAprevious = dApreviousPad[ : , pad:-pad , pad:-pad , : ]
+        # print('dApreviousPad shape:',dApreviousPad.shape)
+        # print(m, nHPre, nWPre, nCPre)
+        assert(dAprevious.shape == (m, nHPre, nWPre, nCPre)),'dAprevious.shape = '+str(dAprevious.shape)
+        return dAprevious,dW,db
 
     @staticmethod
     def maxPoolingForward(Aprevious, f , stride):
