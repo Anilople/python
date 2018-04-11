@@ -26,9 +26,9 @@ class CNN(NN):
         nH = int((nHPre - f) / stride) + 1
         nW = int((nWPre - f) / stride) + 1
         
-        A = np.zeros((m, nH, nW, nC)) 
+        A = np.zeros((m, nH, nW, nC))
         for v in range(nH): # vertical
-            for h in range(nW): # width
+            for h in range(nW): # horizontal
                 vS = v * stride # vertical start
                 vE = vS + f # vertical end
                 hS = h * stride # horizontal start
@@ -47,7 +47,44 @@ class CNN(NN):
     def convolutionBackward(self):
         pass
 
-    def poolingForward(self):
+    @staticmethod
+    def maxPooling(Aprevious, f , stride):
+        # Aprevious shape is (m, nHPre, nWPre, nCPre)
+        assert(len(Aprevious.shape) == 4)
+        m, nHPre, nWPre, nCPre = Aprevious.shape
+        nH = int((nHPre - f) / stride) + 1
+        nW = int((nWPre - f) / stride) + 1
+        A = np.zeros((m,nH,nW,nCPre))
+        for v in range(nH): # vertical
+            for h in range(nW): # horizontal
+                vS = v * stride # vertical start
+                vE = vS + f # vertical end
+                hS = h * stride # horizontal start
+                hE = hS + f # horizontal end
+                ApreviousSlice = Aprevious[:,vS:vE,hS:hE,:] # (m, f, f, nCPre)
+                A[:,v,h,:] += np.max(ApreviousSlice,axis = (1,2)) # take max in (f * f)
+        return A
+
+    @staticmethod
+    def averagePooling(Aprevious, f , stride):
+        # Aprevious shape is (m, nHPre, nWPre, nCPre)
+        assert(len(Aprevious.shape) == 4)
+        m, nHPre, nWPre, nCPre = Aprevious.shape
+        nH = int((nHPre - f) / stride) + 1
+        nW = int((nWPre - f) / stride) + 1
+        A = np.zeros((m,nH,nW,nCPre))
+        for v in range(nH): # vertical
+            for h in range(nW): # horizontal
+                vS = v * stride # vertical start
+                vE = vS + f # vertical end
+                hS = h * stride # horizontal start
+                hE = hS + f # horizontal end
+                ApreviousSlice = Aprevious[:,vS:vE,hS:hE,:] # (m, f, f, nCPre)
+                A[:,v,h,:] += 1.0 / f / f * np.sum(ApreviousSlice,axis = (1,2)) # take max in (f * f)
+        return A
+
+    @staticmethod
+    def poolingForward(Aprevious,):
         pass
     def poolingBackward(self):
         pass
