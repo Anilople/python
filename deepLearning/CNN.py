@@ -182,6 +182,34 @@ class CNN(NN):
                 dAprevious[:,vS:vE,hS:hE,:] += dApreviousSlice
         return dAprevious
 
+    @staticmethod
+    def averagePoolingBackward(Aprevious, dA, f, stride):
+        '''
+        Aprevious   --  (m, nHpre, nWpre, nCpre)
+        dA          --  (m, nH,    nW   , nC   )
+        '''
+        assert(Aprevious.shape[0] == dA.shape[0]),'m not same in Aprevisous and dA'
+        m, nHpre, nWpre, nCpre = Aprevious.shape
+        m, nH,    nW   , nC    = dA.shape
+        assert( int((nHpre - f ) / stride) + 1 == nH)
+        assert( int((nWpre - f ) / stride) + 1 == nW)
+        
+        assert(nCpre == nC),'A is not average Pooling from Aprevious'
+
+        dAprevious = np.zeros(Aprevious.shape) # (m, nHpre, nWpre, nCpre)
+        for v in range(nH): # vertical
+            for h in range(nW): # horizontal
+                vS = v * stride # vertical start
+                vE = vS + f # vertical end
+                hS = h * stride # horizontal start
+                hE = hS + f # horizontal end
+                
+                dAvh = dA[:,v,h,:] # (m, nC)
+                dAvh = dAvh.reshape(m, 1, 1, nC) # (m, 1, 1, nC)
+                dAprevious[:,vS:vE,hS:hE,:] += dAvh * (1.0 / f / f)
+                
+        return dAprevious
+
     def poolingBackward(self):
         pass
 
