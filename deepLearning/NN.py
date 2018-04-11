@@ -60,18 +60,20 @@ class NN:
         self.derivative = function['derivative']
         self.lostFunction = function['lostFunction']
         self.grads = {} # save gradients of Wi,bi in the network
-
+        
         if 'lambda' not in hyperParameters.keys(): # set default L2 value 0.001
             hyperParameters['lambda'] = 0.001
         if 'dropout' not in hyperParameters.keys(): # set default dropout value 0.5
             hyperParameters['dropout'] = 0.5
         hyperParameters['open-dropout'] = 'open-dropout' in hyperParameters.keys() # set open-dropout True if exist, other False
-
+        
+        
         print('L2 regularition: lambda =',hyperParameters['lambda'])
         print('open-dropout:',hyperParameters['open-dropout'])
         if hyperParameters['open-dropout']:
-            print('Dropout: keep probility is',hyperParameters['dropout'])
-
+            print('Dropout in hidden layers: keep probility is',hyperParameters['dropout'])
+        if 'dropout-input' in hyperParameters.keys():
+            print('dropout in input: keep probility is',hyperParameters['dropout-input'])
         self.hyperParameters = hyperParameters
 
     def __str__(self):
@@ -96,6 +98,13 @@ class NN:
         for i in range(1,L+1):
             Wi = parameters['W'+str(i)]
             AiPrevious = caches['A'+str(i-1)] # !! i-1 not i
+
+            if i == 1 and 'dropout-input' in hyperParameters: # dropout in input
+                A0 = caches['A'+str(i-1)]
+                D0 = np.random.rand(*A0.shape) < hyperParameters['dropout-input']
+                caches['D0'] = D0 # save D0
+                AiPrevious = np.multiply(A0,D0)
+
             bi = parameters['b'+str(i)]
             caches['Z'+str(i)],caches['A'+str(i)] = self.forwardOneLayer(Wi,AiPrevious,bi,activation[i])
             # --- handle about dropout
