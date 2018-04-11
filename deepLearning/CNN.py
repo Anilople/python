@@ -84,8 +84,16 @@ class CNN(NN):
         return A
 
     @staticmethod
-    def poolingForward(Aprevious,):
-        pass
+    def poolingForward(Aprevious,hyperParameters):
+        f = hyperParameters['f']
+        stride = hyperParameters['stride']
+        mode = hyperParameters['mode']
+        if mode == 'max':
+            A = CNN.maxPooling(Aprevious, f, stride)
+        elif mode == 'average':
+            A = CNN.averagePooling(Aprevious, f, stride)
+        return A
+        
     def poolingBackward(self):
         pass
 
