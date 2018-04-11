@@ -144,12 +144,10 @@ class NN:
                 # print('dA'+str(i-1),dAiPrevious)
                 grads['dZ'+str(i-1)] = dAiPrevious * derivative[i-1](caches['Z'+str(i-1)],AiPrevious) # don't forget multiple dAiPrevious
                 # print('dZ'+str(i-1),self.grads['dZ'+str(i-1)])
-
                 # --- handle dropout about
                 if hyperParameters['open-dropout']:
-                    print('haha')
-                    grads['dA'+str(i-1)] = np.multiply(grads['dA'+str(i-1)],caches['D'+str(i-1)]) / hyperParameters['dropout']
-                
+                    grads['dA'+str(i-1)] = np.multiply(grads['dA'+str(i-1)],caches['D'+str(i-1)]) / hyperParameters['dropout'] # whatever, it not necessry here
+                    grads['dZ'+str(i-1)] = np.multiply(grads['dZ'+str(i-1)],caches['D'+str(i-1)]) / hyperParameters['dropout'] # !!!!! dZ[i-1] must turn off neorual
             
     def updateParameters(self,learningRate,parameters = None,grads = None):
         # lambd is L2 regularization
