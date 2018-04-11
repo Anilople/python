@@ -48,7 +48,7 @@ class CNN(NN):
         pass
 
     @staticmethod
-    def maxPooling(Aprevious, f , stride):
+    def maxPoolingForward(Aprevious, f , stride):
         # Aprevious shape is (m, nHPre, nWPre, nCPre)
         assert(len(Aprevious.shape) == 4)
         m, nHPre, nWPre, nCPre = Aprevious.shape
@@ -66,7 +66,7 @@ class CNN(NN):
         return A
 
     @staticmethod
-    def averagePooling(Aprevious, f , stride):
+    def averagePoolingForward(Aprevious, f, stride):
         # Aprevious shape is (m, nHPre, nWPre, nCPre)
         assert(len(Aprevious.shape) == 4)
         m, nHPre, nWPre, nCPre = Aprevious.shape
@@ -89,11 +89,12 @@ class CNN(NN):
         stride = hyperParameters['stride']
         mode = hyperParameters['mode']
         if mode == 'max':
-            A = CNN.maxPooling(Aprevious, f, stride)
+            A = CNN.maxPoolingForward(Aprevious, f, stride)
         elif mode == 'average':
-            A = CNN.averagePooling(Aprevious, f, stride)
+            A = CNN.averagePoolingForward(Aprevious, f, stride)
         return A
-        
+
+
     def poolingBackward(self):
         pass
 
