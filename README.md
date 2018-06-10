@@ -1,4 +1,6 @@
-# python
-some code about python
-learn to operate file, Image, socket etc.
-and implement neural network
+# python-learning
+* operate file
+* Image
+* socket 
+* [neural network](./deepLearning/README.md)
+
